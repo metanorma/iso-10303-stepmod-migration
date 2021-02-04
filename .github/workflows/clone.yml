@@ -15,9 +15,11 @@ jobs:
     # continue-on-error: ${{ matrix.experimental }}
     steps:
       - uses: actions/checkout@master
-      - uses: webfactory/ssh-agent@v0.4.1
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
         with:
-          ssh-private-key: ${{ secrets.BOOST_CVS_SSH_PRIVATE_KEY }}
+          key: ${{ secrets.BOOST_CVS_SSH_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.BOOST_CONSEIL_KNOWN_HOSTS }}
       - name: Install dependencies
         run: |
           sudo apt-get update
