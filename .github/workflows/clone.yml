@@ -21,6 +21,9 @@ jobs:
           key: ${{ secrets.BOOST_CVS_SSH_PRIVATE_KEY }}
           name: id_rsa # optional
           known_hosts: ${{ secrets.BOOST_CONSEIL_KNOWN_HOSTS }}
+      - name: Test SSH
+        run: |
+          ssh ronald@cvs.boost-lab.net 'ls ../'
       - name: Install dependencies
         run: |
           sudo apt-get update
