@@ -20,8 +20,8 @@ jobs:
           ssh-private-key: ${{ secrets.BOOST_CVS_SSH_PRIVATE_KEY }}
       - name: Install dependencies
         run: |
-          apt-get update
-          apt-get -y install cvs-fast-export
+          sudo apt-get update
+          sudo apt-get -y install cvs-fast-export
       - name: rsync to stepmod-rsync/
         run: |
           rsync -avrPz -e ssh ronald@cvs.boost-lab.net:/stepmod/ stepmod-rsync/
