@@ -21,6 +21,10 @@ jobs:
           key: ${{ secrets.BOOST_CVS_SSH_PRIVATE_KEY }}
           name: id_rsa # optional
           known_hosts: ${{ secrets.BOOST_CONSEIL_KNOWN_HOSTS }}
+          config: |
+            Host cvs.boost-lab.net
+              User ronald
+              IdentityFile ~/.ssh/id_rsa
       - name: Test SSH
         run: |
           ssh ronald@cvs.boost-lab.net 'ls ../'
@@ -33,6 +37,7 @@ jobs:
       #     rsync -avrPz -e ssh ronald@cvs.boost-lab.net:/stepmod/ stepmod/
       - name: Run cvssync to sync to 'stepmod-rsync'
         run: |
+          mkdir stepmod
           cvssync -v ronald@cvs.boost-lab.net:/stepmod stepmod/data
       # - name: Create fast-import file for Git
       #   run: |
