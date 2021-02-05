@@ -34,13 +34,28 @@ jobs:
       - name: Run cvssync to sync to 'stepmod-rsync'
         run: |
           cvssync -v ronald@cvs.boost-lab.net:/stepmod stepmod/data
+      # - name: Create fast-import file for Git
+      #   run: |
+      #     cvsconvert -v -p -A author-map.txt stepmod/data
       - name: Create fast-import file for Git
         run: |
-          cvsconvert -v -p -A author-map.txt stepmod/data
-        # run: |
-        #   find stepmod/repository_index.xml stepmod/data | cvs-fast-export -t 2 -A author-map.txt > stepmod.fi
-      # - name: Create directory and import into it
-#         run: |
-#           mkdir -p iso-10303-stepmod-cvs
-#           cd iso-10303-stepmod-cvs
-#           git fast-import < ../stepmod.fi
+          find stepmod/data | cvs-fast-export -t 4 -p -A author-map.txt > stepmod.fi
+      - name: Create directory and import into it
+        run: |
+          mkdir -p iso-10303-stepmod-cvs
+          cd iso-10303-stepmod-cvs
+          git fast-import < ../stepmod.fi
+      - name: Copy out stepmod/repository_index.xml
+        env:
+          CVSROOT: ronald@cvs.boost-lab.net:/stepmod
+          CVS_RSH: ssh
+        run: |
+          cd /tmp
+          cvs co stepmod/repository_index.xml
+          cd $GITHUB_WORKSPACE/iso-10303-stepmod-cvs
+          mv /tmp/stepmod/repository_index.xml .
+          git add repository_index.xml
+          git commit -m 'Add repository_index.xml'
+      - name: Git log
+        run: |
+          git log | head -100
