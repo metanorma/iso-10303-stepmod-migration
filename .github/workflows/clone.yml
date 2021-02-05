@@ -30,15 +30,17 @@ jobs:
           sudo apt-get -y install cvs-fast-export
       # - name: rsync to stepmod-rsync/
       #   run: |
-      #     rsync -avrPz -e ssh ronald@cvs.boost-lab.net:/stepmod/ stepmod-rsync/
+      #     rsync -avrPz -e ssh ronald@cvs.boost-lab.net:/stepmod/ stepmod/
       - name: Run cvssync to sync to 'stepmod-rsync'
         run: |
-          cvssync ronald@cvs.boost-lab.net:/stepmod stepmod
+          cvssync -v ronald@cvs.boost-lab.net:/stepmod stepmod/data
       - name: Create fast-import file for Git
         run: |
-          find stepmod/repository_index.xml stepmod/data | cvs-fast-export -t 2 -A author-map.txt > stepmod.fi
-      - name: Create directory and import into it
-        run: |
-          mkdir -p iso-10303-stepmod-cvs
-          cd iso-10303-stepmod-cvs
-          git fast-import < ../stepmod.fi
+          cvsconvert -v -p -A author-map.txt stepmod/data
+        # run: |
+        #   find stepmod/repository_index.xml stepmod/data | cvs-fast-export -t 2 -A author-map.txt > stepmod.fi
+      # - name: Create directory and import into it
+#         run: |
+#           mkdir -p iso-10303-stepmod-cvs
+#           cd iso-10303-stepmod-cvs
+#           git fast-import < ../stepmod.fi
