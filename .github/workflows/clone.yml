@@ -32,6 +32,18 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get -y install cvs-fast-export
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "metanorma-ci"
+          git config --global user.email "metanorma-ci@users.noreply.github.com"
+
+      - name: Initialize new git repository at iso-10303-stepmod-cvs
+        run: |
+          git init iso-10303-stepmod-cvs
+          git -C iso-10303-stepmod-cvs remote add origin \
+            https://metanorma-ci:${{ secrets.METANORMA_CI_PAT_TOKEN }}@github.com/metanorma/iso-10303-stepmod-cvs
+
       # - name: rsync to stepmod-rsync/
       #   run: |
       #     rsync -avrPz -e ssh ronald@cvs.boost-lab.net:/stepmod/ stepmod/
@@ -39,18 +51,18 @@ jobs:
         run: |
           mkdir stepmod
           cvssync -v ronald@cvs.boost-lab.net:/stepmod stepmod/data
+
       # - name: Create fast-import file for Git
       #   run: |
       #     cvsconvert -v -p -A author-map.txt stepmod/data
       - name: Create fast-import file for Git
         run: |
           find stepmod/data | cvs-fast-export -t 4 -p -A author-map.txt > stepmod.fi
-      - name: Create directory and import into it
+
+      - name: Import fast-import file
         run: |
-          mkdir -p iso-10303-stepmod-cvs
-          cd iso-10303-stepmod-cvs
-          git init .
-          git fast-import < ../stepmod.fi
+          git -C iso-10303-stepmod-cvs fast-import < stepmod.fi
+
       - name: Copy out stepmod/repository_index.xml
         env:
           CVSROOT: ronald@cvs.boost-lab.net:/stepmod
@@ -64,4 +76,10 @@ jobs:
           git commit -m 'Add repository_index.xml'
       - name: Git log
         run: |
+          cd $GITHUB_WORKSPACE/iso-10303-stepmod-cvs
           git log | head -100
+      - name: Git push to iso-10303-stepmod-cvs
+        run: |
+          cd $GITHUB_WORKSPACE/iso-10303-stepmod-cvs
+          git push -f
+
