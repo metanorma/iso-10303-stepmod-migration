@@ -49,6 +49,7 @@ jobs:
         run: |
           mkdir -p iso-10303-stepmod-cvs
           cd iso-10303-stepmod-cvs
+          git init .
           git fast-import < ../stepmod.fi
       - name: Copy out stepmod/repository_index.xml
         env:
