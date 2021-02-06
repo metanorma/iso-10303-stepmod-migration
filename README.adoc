@@ -1,0 +1,35 @@
+= ISO 10303 STEPmod CVS import to Git
+
+image:https://github.com/metanorma/iso-10303-stepmod-cvs-import/workflows/import/badge.svg["Conversion status (master)", link="https://github.com/metanorma/iso-10303-stepmod-cvs-import/actions?query=workflow%3Aimport"]
+
+
+== Purpose
+
+This repository contains a workflow that imports the ISO 10303
+STEPmod CVS repository at Boost to the
+https://github.com/metanorma/iso-10303-stepmod-cvs[iso-10303-stepmod-cvs]
+Git repository.
+
+
+== Details
+
+There are two repos involved here:
+
+* Repo with import workflow: https://github.com/metanorma/iso-10303-stepmod-cvs-import
+* Repo to hold converted git repo: https://github.com/metanorma/iso-10303-stepmod-cvs
+
+Under `.github/` you will see the `import.yml` workflow:
+
+. The whole workflow depends on the https://gitlab.com/esr/cvs-fast-export[`cvs-fast-export`] package;
+. It uses `cvssync` to retrieve the repo via `ssh`;
+. It runs `cvs-fast-export` to create a git "`fast import`" file;
+. We import all this into a newly-initialized git repo;
+. We add the `repository_index.xml` to the new git repo;
+. We push all tags and branches to the https://github.com/metanorma/iso-10303-stepmod-cvs["converted" GitHub repo], using the metanorma-ci GitHub user.
+
+The Boost Conseil CVS is located at `cvs.boost-lab.net`.
+
+
+== Frequency
+
+This workflow is to be run once a day to import latest changes from Boost CVS.
