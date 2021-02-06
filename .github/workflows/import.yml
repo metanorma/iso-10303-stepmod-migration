@@ -11,8 +11,8 @@ on:
     - cron: '0 1 * * *'  # every day at 1:00
 
 jobs:
-  rsync:
-    name: rsync
+  import:
+    name: import
     runs-on: ubuntu-latest
     # continue-on-error: ${{ matrix.experimental }}
     steps:
