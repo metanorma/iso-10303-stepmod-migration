@@ -68,7 +68,7 @@ jobs:
 
       - name: Git reset newly imported repo
         run: |
-          git reset --hard
+          git -C iso-10303-stepmod-cvs reset --hard
 
       - name: Copy out stepmod/repository_index.xml
         env:
@@ -82,10 +82,12 @@ jobs:
           mv /tmp/stepmod/repository_index.xml .
           git add repository_index.xml
           git commit -m 'Add repository_index.xml'
+
       - name: Git log
         run: |
           cd $GITHUB_WORKSPACE/iso-10303-stepmod-cvs
           git log | head -100
+
       - name: Git push to iso-10303-stepmod-cvs
         run: |
           cd $GITHUB_WORKSPACE/iso-10303-stepmod-cvs
