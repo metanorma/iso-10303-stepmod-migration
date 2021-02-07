@@ -43,8 +43,16 @@ jobs:
       - name: Initialize new git repository at iso-10303-stepmod-cvs
         run: |
           git init iso-10303-stepmod-cvs
+
+      - name: Add GitHub remote to git repo
+        run: |
           git -C iso-10303-stepmod-cvs remote add origin \
             https://${{ secrets.METANORMA_CI_USERNAME }}:${{ secrets.METANORMA_CI_PAT_TOKEN }}@github.com/metanorma/iso-10303-stepmod-cvs
+
+      - name: Add ISO BitBucket remote to git repo
+        run: |
+          git -C iso-10303-stepmod-cvs remote add iso \
+            https://${{ secrets.ISO_BITBUCKET_USERNAME_URLENCODED }}:${{ secrets.ISO_BITBUCKET_PAT_TOKEN_URLENCODED }}@sd.iso.org/bitbucket-pilot/scm/~ronald.tse_eccma.org/smrl-metanorma.git
 
       # - name: rsync to stepmod-rsync/
       #   run: |
@@ -88,9 +96,14 @@ jobs:
           cd $GITHUB_WORKSPACE/iso-10303-stepmod-cvs
           git log | head -100
 
-      - name: Git push to iso-10303-stepmod-cvs
+      - name: Git push to GitHub iso-10303-stepmod-cvs
         run: |
           cd $GITHUB_WORKSPACE/iso-10303-stepmod-cvs
           git push --all -f
           git push --tags -f
 
+      - name: Git push to ISO iso-10303-stepmod-cvs
+        run: |
+          cd $GITHUB_WORKSPACE/iso-10303-stepmod-cvs
+          git push --all -f iso
+          git push --tags -f iso
