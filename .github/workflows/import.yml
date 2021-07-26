@@ -101,17 +101,14 @@ jobs:
 
       - name: Git log
         run: |
-          cd $GITHUB_WORKSPACE/iso-10303-stepmod-cvs
-          git log | head -100
+          git -C iso-10303-stepmod-cvs log | head -100
 
       - name: Git push to GitHub iso-10303-stepmod-cvs
         run: |
-          cd $GITHUB_WORKSPACE/iso-10303-stepmod-cvs
-          git push --all -f
-          git push --tags -f
+          git -C iso-10303-stepmod-cvs push --all -f
+          git -C iso-10303-stepmod-cvs push --tags -f
 
       - name: Git push to ISO iso-10303-stepmod-cvs
         run: |
-          cd $GITHUB_WORKSPACE/iso-10303-stepmod-cvs
-          git push --all -f iso
-          git push --tags -f iso
+          git -C iso-10303-stepmod-cvs push --all -f iso
+          git -C iso-10303-stepmod-cvs push --tags -f iso
