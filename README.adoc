@@ -1,6 +1,6 @@
 = ISO 10303 STEPmod CVS import to Git
 
-image:https://github.com/metanorma/iso-10303-stepmod-cvs-import/workflows/import/badge.svg["Conversion status (master)", link="https://github.com/metanorma/iso-10303-stepmod-cvs-import/actions?query=workflow%3Aimport"]
+image:https://github.com/metanorma/iso-10303-stepmod-cvs-import/workflows/import/badge.svg["Conversion status (main)", link="https://github.com/metanorma/iso-10303-stepmod-cvs-import/actions?query=workflow%3Aimport"]
 
 
 == Purpose

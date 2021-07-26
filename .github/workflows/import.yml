@@ -4,7 +4,7 @@ name: import
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
     # tags:
     #   - '*'
   schedule:
@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     # continue-on-error: ${{ matrix.experimental }}
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v2
       - name: Install SSH key
         uses: shimataro/ssh-key-action@v2
         with:
@@ -74,9 +74,17 @@ jobs:
         run: |
           git -C iso-10303-stepmod-cvs fast-import < stepmod.fi
 
-      - name: Git reset newly imported repo
+      - name: Git reset newly imported repo and rename master to main
         run: |
           git -C iso-10303-stepmod-cvs reset --hard
+          git -C iso-10303-stepmod-cvs branch -m master main
+
+      - name: Remove large files from history that have been already deleted
+        run: |
+          curl -sSL https://repo1.maven.org/maven2/com/madgag/bfg/1.14.0/bfg-1.14.0.jar -o bfg.jar
+          java -jar bfg.jar --strip-blobs-bigger-than 100M iso-10303-stepmod-cvs
+          git -C iso-10303-stepmod-cvs reflog expire --expire=now --all && \
+            git -C iso-10303-stepmod-cvs gc --prune=now --aggressive
 
       - name: Copy out stepmod/repository_index.xml
         env:
