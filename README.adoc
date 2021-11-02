@@ -1,6 +1,6 @@
 = ISO 10303 STEPmod CVS import to Git
 
-image:https://github.com/metanorma/iso-10303-stepmod-cvs-import/workflows/import/badge.svg["Conversion status (main)", link="https://github.com/metanorma/iso-10303-stepmod-cvs-import/actions?query=workflow%3Aimport"]
+image:https://github.com/metanorma/iso-10303-stepmod-cvs-migration/workflows/import/badge.svg["Conversion status (main)", link="https://github.com/metanorma/iso-10303-stepmod-cvs-migration/actions?query=workflow%3Aimport"]
 
 
 == Purpose
@@ -20,12 +20,12 @@ There are two repos involved here:
 
 Under `.github/` you will see the `import.yml` workflow:
 
-. The whole workflow depends on the https://gitlab.com/esr/cvs-fast-export[`cvs-fast-export`] package;
-. It uses `cvssync` to retrieve the repo via `ssh`;
-. It runs `cvs-fast-export` to create a git "`fast import`" file;
-. We import all this into a newly-initialized git repo;
-. We add the `repository_index.xml` to the new git repo;
-. We push all tags and branches to the https://github.com/metanorma/iso-10303-stepmod-cvs["converted" GitHub repo], using the metanorma-ci GitHub user.
+. The whole workflow depends on
+.. https://gitlab.com/esr/reposurgeon[`reposurgeon`];
+.. https://gitlab.com/esr/cvs-fast-export[`cvs-fast-export`];
+. It uses `rsync` to retrieve the repo via `ssh`;
+. It runs `reposurgeon` to convert the whole repository history into Git;
+. We push all tags and branches to the https://github.com/metanorma/iso-10303-stepmod-cvs["converted" GitHub repo], using the `metanorma-ci` GitHub user.
 
 The Boost Conseil CVS is located at `cvs.boost-lab.net`.
 
@@ -33,3 +33,83 @@ The Boost Conseil CVS is located at `cvs.boost-lab.net`.
 == Frequency
 
 This workflow is to be run once a day to import latest changes from Boost CVS.
+
+
+== Usage
+
+=== Strategy to import
+
+Cloning a remote CVS repository while importing is super slow,
+especially for a large repository like STEPmod.
+
+We have tested and settled on these steps:
+
+. Maintain a local `rsync` copy of the CVS repository.
+
+. Resolve all names from the CVS repository (CVS only stores UNIX usernames, in
+Git are names and emails) with a `reposurgeon` user map.
+
+. Run `reposurgeon` which depends on `cvs-fast-import` to import the CVS
+repository into the `iso-10303-stepmod-cvs` Git repo.
+
+
+=== Creating the `rsync` clone of the CVS repository
+
+[source,sh]
+----
+rsync -avrPz -e ssh ronald@cvs.boost-lab.net:/stepmod/ stepmod-rsync/
+----
+
+=== Install reposurgeon
+
+See import.yml.
+
+=== Install cvs-fast-export
+
+`cvs-fast-export` works on Linux and macOS.
+Run it on Ubuntu with the `rsync`'ed CVS directory.
+
+Install:
+[source,sh]
+----
+$ apt-get -y install cvs-fast-export
+----
+
+=== Getting all users for email mapping
+
+Find all authors in the CVS repository using `make stubmap`.
+
+[source,sh]
+----
+$ cd stepmod
+$ make stubmap
+----
+
+Then manually edit the `stepmod.map` file to provide author information.
+
+
+=== Run reposurgeon to convert
+
+After all authors are mapped, run `reposurgeon` to create
+`stepmod-git`.
+
+[source,sh]
+----
+$ # assume that stepmod-rsync is the rsync copy
+$ cd stepmod
+$ ln -s ../stepmod-rsync/stepmod stepmod-mirror
+$ make
+----
+
+The converted Git repo will be available at `stepmod/stepmod-git`.
+
+=== Upload the new Git repo
+
+[source,sh]
+----
+$ cd stepmod/stepmod-git
+$ git remote add origin git@github.com/metanorma/iso-10303-stepmod-cvs
+$ git push --all
+$ git push --tags
+----
+

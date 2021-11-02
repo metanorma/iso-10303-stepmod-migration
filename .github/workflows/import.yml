@@ -5,6 +5,8 @@ name: import
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - '*.adoc'
     # tags:
     #   - '*'
   schedule:
