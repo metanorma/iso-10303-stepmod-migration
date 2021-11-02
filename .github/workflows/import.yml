@@ -73,7 +73,7 @@ jobs:
       #   run: |
       #     cvssync -v ronald@cvs.boost-lab.net:/stepmod stepmod/data
 
-      - name: Convert SVN to Git via reposurgeon
+      - name: Convert CVS to Git via reposurgeon
         working-directory: stepmod
         env:
           TERM: xterm-256color
@@ -82,15 +82,22 @@ jobs:
           make
           mv stepmod-git ../iso-10303-stepmod-cvs
 
-      - name: Add GitHub remote to git repo
+      - name: Add Git remote - GitHub
+        working-directory: iso-10303-stepmod-cvs
         run: |
-          git -C iso-10303-stepmod-cvs remote add origin \
+          git remote add origin \
             https://${{ secrets.METANORMA_CI_USERNAME }}:${{ secrets.METANORMA_CI_PAT_TOKEN }}@github.com/metanorma/iso-10303-stepmod-cvs
 
-      - name: Add ISO BitBucket remote to git repo
+      - name: Add Git remote - ISO BitBucket
+        working-directory: iso-10303-stepmod-cvs
         run: |
-          git -C iso-10303-stepmod-cvs remote add iso \
+          git remote add iso \
             https://${{ secrets.ISO_BITBUCKET_USERNAME_URLENCODED }}:${{ secrets.ISO_BITBUCKET_PAT_TOKEN_URLENCODED }}@sd.iso.org/bitbucket-pilot/scm/~ronald.tse_eccma.org/smrl-metanorma.git
+
+      - name: Git switch branch to main
+        working-directory: iso-10303-stepmod-cvs
+        run: |
+          git checkout main
 
       # - name: Remove large files from history that have been already deleted
       #   run: |
@@ -99,29 +106,58 @@ jobs:
       #     git -C iso-10303-stepmod-cvs reflog expire --expire=now --all && \
       #       git -C iso-10303-stepmod-cvs gc --prune=now --aggressive
 
-      # - name: Copy out stepmod/repository_index.xml
-      #   env:
-      #     CVSROOT: ronald@cvs.boost-lab.net:/stepmod
-      #     CVS_RSH: ssh
-      #   run: |
-      #     pushd /tmp
-      #     cvs co stepmod/repository_index.xml
-      #     popd
-      #     cd iso-10303-stepmod-cvs
-      #     mv /tmp/stepmod/repository_index.xml .
-      #     git add repository_index.xml
-      #     git commit -m 'Add repository_index.xml'
-
-      - name: Git log
+      - name: List git branches
+        working-directory: iso-10303-stepmod-cvs
         run: |
-          git -C iso-10303-stepmod-cvs log | head -100
+          git branch
+
+      - name: List git tags
+        working-directory: iso-10303-stepmod-cvs
+        run: |
+          git tag
 
       - name: Git push to GitHub iso-10303-stepmod-cvs
+        working-directory: iso-10303-stepmod-cvs
         run: |
-          git -C iso-10303-stepmod-cvs push --all -f
-          git -C iso-10303-stepmod-cvs push --tags -f
+          max=$(git log --oneline|wc -l); \
+          for i in $(seq $max -500 1); do \
+            echo $i; g=$(git log --reverse --oneline --skip $i -n1|perl -alne'print $F[0]'); \
+            git push origin $g:refs/heads/gitconvert -f; \
+          done
 
-      - name: Git push to ISO iso-10303-stepmod-cvs
+          for x in $(git branch | tr -ds '*' '' | paste -d " " - - - - - - - - - - | tr -s ' ' '#'); do \
+            y="${x//#/ }"; \
+            echo $y; \
+            git push origin -f $y; \
+          done
+
+          for x in $(git tag | tr -ds '*' '' | paste -d " " - - - - - - - - - - | tr -s ' ' '#'); do \
+            y="${x//#/ }"; \
+            echo $y; \
+            git push origin -f $y; \
+          done
+
+          git push origin :refs/heads/gitconvert -f
+
+      - name: Git push to ISO BitBucket smrl-metanorma
+        working-directory: iso-10303-stepmod-cvs
         run: |
-          git -C iso-10303-stepmod-cvs push --all -f iso
-          git -C iso-10303-stepmod-cvs push --tags -f iso
+          max=$(git log --oneline|wc -l); \
+          for i in $(seq $max -500 1); do \
+            echo $i; g=$(git log --reverse --oneline --skip $i -n1|perl -alne'print $F[0]'); \
+            git push iso $g:refs/heads/gitconvert -f; \
+          done
+
+          for x in $(git branch | tr -ds '*' '' | paste -d " " - - - - - - - - - - | tr -s ' ' '#'); do \
+            y="${x//#/ }"; \
+            echo $y; \
+            git push iso -f $y; \
+          done
+
+          for x in $(git tag | tr -ds '*' '' | paste -d " " - - - - - - - - - - | tr -s ' ' '#'); do \
+            y="${x//#/ }"; \
+            echo $y; \
+            git push iso -f $y; \
+          done
+
+          git push iso :refs/heads/gitconvert -f
