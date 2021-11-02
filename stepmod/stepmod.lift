@@ -1,0 +1,5 @@
+# Lift commands for stepmod
+lint
+gitify
+expunge /WG12N_20190719.zip$/
+branch rename refs/heads/master refs/heads/main

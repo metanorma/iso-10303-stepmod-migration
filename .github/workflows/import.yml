@@ -14,9 +14,9 @@ jobs:
   import:
     name: import
     runs-on: ubuntu-latest
-    # continue-on-error: ${{ matrix.experimental }}
     steps:
       - uses: actions/checkout@v2
+
       - name: Install SSH key
         uses: shimataro/ssh-key-action@v2
         with:
@@ -27,9 +27,11 @@ jobs:
             Host cvs.boost-lab.net
               User ronald
               IdentityFile ~/.ssh/id_rsa
+
       - name: Test SSH
         run: |
           ssh ronald@cvs.boost-lab.net 'ls ../'
+
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -37,12 +39,48 @@ jobs:
 
       - name: Setup Git
         run: |
+          git config --global init.defaultBranch main
           git config --global user.name "metanorma-ci"
           git config --global user.email "metanorma-ci@users.noreply.github.com"
 
-      - name: Initialize new git repository at iso-10303-stepmod-cvs
+      - name: reposurgeon - Cache reposurgeon
+        id: cache-reposurgeon
+        uses: actions/cache@v2
+        with:
+          path: reposurgeon
+          key: ${{ runner.os }}-${{ hashFiles('reposurgeon-cache-key') }}
+
+      - name: reposurgeon - Clone and build reposurgeon
+        if: steps.cache-reposurgeon.outputs.cache-hit != 'true'
         run: |
-          git init iso-10303-stepmod-cvs
+          git clone https://gitlab.com/esr/reposurgeon
+          cd reposurgeon
+          git checkout 2f5f83ec63da34beaf8293434b5e1627366dfa7c
+          sed -i 's/apt-get install /apt-get install -y /' Makefile
+          make fullinstall
+          make all
+
+      - name: reposurgeon - Install reposurgeon
+        working-directory: reposurgeon
+        run: |
+          sudo make install
+
+      - name: rsync to stepmod-rsync/
+        run: |
+          rsync -avrPz -e ssh ronald@cvs.boost-lab.net:/stepmod/ stepmod-rsync
+      #     rsync -avrPz -e ssh ronald@cvs.boost-lab.net:/stepmod/stepmod/data stepmod-rsync
+      # - name: Run cvssync to sync to 'stepmod/data'
+      #   run: |
+      #     cvssync -v ronald@cvs.boost-lab.net:/stepmod stepmod/data
+
+      - name: Convert SVN to Git via reposurgeon
+        working-directory: stepmod
+        env:
+          TERM: xterm-256color
+        run: |
+          ln -s ../stepmod-rsync/stepmod stepmod-mirror
+          make
+          mv stepmod-git ../iso-10303-stepmod-cvs
 
       - name: Add GitHub remote to git repo
         run: |
@@ -54,50 +92,25 @@ jobs:
           git -C iso-10303-stepmod-cvs remote add iso \
             https://${{ secrets.ISO_BITBUCKET_USERNAME_URLENCODED }}:${{ secrets.ISO_BITBUCKET_PAT_TOKEN_URLENCODED }}@sd.iso.org/bitbucket-pilot/scm/~ronald.tse_eccma.org/smrl-metanorma.git
 
-      # - name: rsync to stepmod-rsync/
+      # - name: Remove large files from history that have been already deleted
       #   run: |
-      #     rsync -avrPz -e ssh ronald@cvs.boost-lab.net:/stepmod/ stepmod/
-      - name: Run cvssync to sync to 'stepmod-rsync'
-        run: |
-          mkdir stepmod
-          cvssync -v ronald@cvs.boost-lab.net:/stepmod stepmod/data
+      #     curl -sSL https://repo1.maven.org/maven2/com/madgag/bfg/1.14.0/bfg-1.14.0.jar -o bfg.jar
+      #     java -jar bfg.jar --strip-blobs-bigger-than 100M iso-10303-stepmod-cvs
+      #     git -C iso-10303-stepmod-cvs reflog expire --expire=now --all && \
+      #       git -C iso-10303-stepmod-cvs gc --prune=now --aggressive
 
-      # - name: Create fast-import file for Git
+      # - name: Copy out stepmod/repository_index.xml
+      #   env:
+      #     CVSROOT: ronald@cvs.boost-lab.net:/stepmod
+      #     CVS_RSH: ssh
       #   run: |
-      #     ## cvsconvert doesn't seem to be working in the latest version
-      #     cvsconvert -v -p -A author-map.txt stepmod/data
-      - name: Create fast-import file for Git
-        run: |
-          find stepmod/data | cvs-fast-export -t 4 -p -A author-map.txt > stepmod.fi
-
-      - name: Import fast-import file
-        run: |
-          git -C iso-10303-stepmod-cvs fast-import < stepmod.fi
-
-      - name: Git reset newly imported repo and rename master to main
-        run: |
-          git -C iso-10303-stepmod-cvs reset --hard
-          git -C iso-10303-stepmod-cvs branch -m master main
-
-      - name: Remove large files from history that have been already deleted
-        run: |
-          curl -sSL https://repo1.maven.org/maven2/com/madgag/bfg/1.14.0/bfg-1.14.0.jar -o bfg.jar
-          java -jar bfg.jar --strip-blobs-bigger-than 100M iso-10303-stepmod-cvs
-          git -C iso-10303-stepmod-cvs reflog expire --expire=now --all && \
-            git -C iso-10303-stepmod-cvs gc --prune=now --aggressive
-
-      - name: Copy out stepmod/repository_index.xml
-        env:
-          CVSROOT: ronald@cvs.boost-lab.net:/stepmod
-          CVS_RSH: ssh
-        run: |
-          pushd /tmp
-          cvs co stepmod/repository_index.xml
-          popd
-          cd iso-10303-stepmod-cvs
-          mv /tmp/stepmod/repository_index.xml .
-          git add repository_index.xml
-          git commit -m 'Add repository_index.xml'
+      #     pushd /tmp
+      #     cvs co stepmod/repository_index.xml
+      #     popd
+      #     cd iso-10303-stepmod-cvs
+      #     mv /tmp/stepmod/repository_index.xml .
+      #     git add repository_index.xml
+      #     git commit -m 'Add repository_index.xml'
 
       - name: Git log
         run: |
