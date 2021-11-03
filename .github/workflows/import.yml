@@ -26,13 +26,13 @@ jobs:
           name: id_rsa # optional
           known_hosts: ${{ secrets.BOOST_CONSEIL_KNOWN_HOSTS }}
           config: |
-            Host cvs.boost-lab.net
-              User ronald
+            Host ${{ secrets.BOOST_CVS_HOST }}
+              User ${{ secrets.BOOST_CVS_SSH_USER }}
               IdentityFile ~/.ssh/id_rsa
 
       - name: Test SSH
         run: |
-          ssh ronald@cvs.boost-lab.net 'ls ../'
+          ssh ${{ secrets.BOOST_CVS_SSH_USER }}@${{ secrets.BOOST_CVS_HOST }} 'ls ../'
 
       - name: Install dependencies
         run: |
@@ -69,11 +69,11 @@ jobs:
 
       - name: rsync to stepmod-rsync/
         run: |
-          rsync -avrPz -e ssh ronald@cvs.boost-lab.net:/stepmod/ stepmod-rsync
-      #     rsync -avrPz -e ssh ronald@cvs.boost-lab.net:/stepmod/stepmod/data stepmod-rsync
+          rsync -avrPz -e ssh ${{ secrets.BOOST_CVS_SSH_USER }}@${{ secrets.BOOST_CVS_HOST }}:/stepmod/ stepmod-rsync
+      #     rsync -avrPz -e ssh ${{ secrets.BOOST_CVS_SSH_USER }}@${{ secrets.BOOST_CVS_HOST }}:/stepmod/stepmod/data stepmod-rsync
       # - name: Run cvssync to sync to 'stepmod/data'
       #   run: |
-      #     cvssync -v ronald@cvs.boost-lab.net:/stepmod stepmod/data
+      #     cvssync -v ${{ secrets.BOOST_CVS_SSH_USER }}@${{ secrets.BOOST_CVS_HOST }}:/stepmod stepmod/data
 
       - name: Convert CVS to Git via reposurgeon
         working-directory: stepmod
