@@ -1,0 +1,190 @@
+= DEPRECATED: previous attempts to convert STEPmod CVS to Git
+
+== Purpose
+
+The goal is to import the CSV-managed files in a way useable via Git, with full history information.
+
+Cloning a remote CVS repository while importing is super slow,
+especially for a large repository like STEPmod.
+
+Previous to the current approach documented at README.adoc, we tried the
+following approaches.
+
+
+== DEPRECATED approach 1: via `cvs-fast-import`
+
+=== General
+
+This guide is used as reference for the usage of `cvs-fast-import`:
+https://oitofelix.github.io/article-savannah-cvs-to-git-migration/
+
+We have tested and settled on these steps:
+
+. Maintain a local `rsync` copy of the CVS repository.
+. Resolve all names from the CVS repository (CVS only stores UNIX usernames, in Git are names and emails) using `cvs-fast-import`.
+. Run `cvs-fast-import` to import the CVS repository into the `iso-10303-stepmod-cvs` Git repo.
+
+
+=== Creating the `rsync` clone of the CVS repository
+
+[source,sh]
+----
+rsync -avrPz -e ssh {{username}}@{{hostname}}:/stepmod/ stepmod-rsync/
+----
+
+
+=== Install cvs-fast-export
+
+`cvs-fast-export` only works on Linux.
+Run it on Ubuntu with the `rsync`'ed CVS directory.
+
+Install:
+[source,sh]
+----
+$ apt-get -y install cvs-fast-export
+----
+
+=== Getting all users for email mapping
+
+Find all authors in the CVS repository using `cvs-fast-export -a`.
+It is much faster than using the equivalent CVS command to list all authors.
+
+[source,sh]
+----
+$ find stepmod-rsync -type f | cvs-fast-export -a
+----
+
+
+=== Create fast-import file for Git
+
+After all authors are mapped, run `cvs-fast-export` to create
+the import file.
+
+[source,sh]
+----
+$ find stepmod-rsync -type f | cvs-fast-export -A author-map.txt > fast-import-file
+----
+
+=== Perform the Git fast-import
+
+Once the fast-import file is created, we can perform the Git import.
+
+[source,sh]
+----
+$ cd iso-10303-stepmod-cvs
+$ git fast-import < ../fast-import-file
+----
+
+
+=== Upload the new Git repo
+
+[source,sh]
+----
+git push --all && git push --tags
+----
+
+
+== DEPRECATED approach 2: Use `git cvsimport` (do not use, it won't work)
+
+=== General
+
+https://stackoverflow.com/questions/11362676/how-to-import-and-keep-updated-a-cvs-repository-in-git[This StackOverflow post]
+describes steps for using `git cvsimport`.
+
+Originally the `git cvsimport` tool was chosen since it is part of
+`git`. However, it utilizes a deprecated/unmaintained tool called
+`cvsps`. The latest `cvsps` is version 3, but only version 2 is
+compatible with `git cvsimport`.
+
+In addition, the `cvsps` tool is maintained by the maintainer
+of `cvs-fast-import`, and is no longer updated.
+Eventually `cvs-fast-import` is used instead.
+
+WARNING: This command completely fails
+on this repository because it is too large and complex.
+
+
+=== Setup
+
+On macOS, run the following commands to setup for running the import. The `git` executable must be installed.
+
+Install `cvsps` version 2.
+
+NOTE: The steps from the StackOverflow of installing `cvsps` no longer work.
+
+[source,sh]
+----
+$ brew tap Frizlab/Perso
+# ==> Tapping frizlab/perso
+# Cloning into '/usr/local/Homebrew/Library/Taps/frizlab/homebrew-perso'...
+# remote: Enumerating objects: 123, done.
+# remote: Total 123 (delta 0), reused 0 (delta 0), pack-reused 123
+# Receiving objects: 100% (123/123), 19.08 KiB | 91.00 KiB/s, done.
+# Resolving deltas: 100% (43/43), done.
+# Tapped 1 cask and 10 formulae (38 files, 60.5KB).
+
+$ brew install cvsps@2
+# ==> Installing cvsps@2 from frizlab/perso
+# Warning: A newer Command Line Tools release is available.
+# Update them from Software Update in System Preferences or
+# https://developer.apple.com/download/more/.
+# ==> Downloading https://deb.debian.org/debian/pool/main/c/cvsps/cvsps_2.1.orig.tar.gz
+######################################################################## 100.0%
+# ==> make all
+# ==> make install prefix=/usr/local/Cellar/cvsps@2/2.1
+# 🍺  /usr/local/Cellar/cvsps@2/2.1: 7 files, 124.6KB, built in 6 seconds
+----
+
+Verify it is installed:
+[source,sh]
+----
+$ cvsps -v
+# Can't open CVS/Root
+# cannot determine CVSROOT
+----
+
+////
+== Checkout the CVS repository
+
+First set the `CVSROOT` and `CVS_RSH` variables.
+
+[source,sh]
+----
+export CVSROOT=:ext:{{username}}@{{hostname}}:/stepmod
+export CVS_RSH=ssh
+cvs checkout stepmod
+# => stepmod/ is created in $PWD
+----
+////
+
+=== Run the import
+
+Run the import from CVS to Git.
+
+Go to the directory that will carry the target Git repository.
+
+Run `git cvsimport`.
+
+[source,sh]
+----
+# Importing from remote
+$ export CVSROOT=:ext:{{username}}@{{hostname}}:/stepmod
+$ export CVS_RSH=ssh
+$ git cvsimport -C iso-10303-stepmod-cvs -r cvs -k -v -d $CVSROOT stepmod
+
+# Importing from local rsync'ed copy
+$ export CVSROOT=$(pwd)/stepmod-rsync
+$ git cvsimport -C iso-10303-stepmod-cvs -r cvs -k -v -d $CVSROOT stepmod
+----
+
+WARNING: TLDR. Technically this should work, but I ran into a `cvsps cannot allocate memory` error with 64GB of RAM, and not even completing the clone after 24 hours. So I gave up and switched to local. And local still takes a long time with tons of error messages. `cvs-fast-import` only takes 5-10 minutes to import.
+
+
+=== Updating the CVS import
+
+Run `git cvsimport` to synchronize the Git repo using updated data from CVS.
+
+[source,sh]
+----
+$ git cvsimport
+----

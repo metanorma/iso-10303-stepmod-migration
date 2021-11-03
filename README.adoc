@@ -37,10 +37,13 @@ The workflow goes:
 
 NOTE: The Boost Conseil CVS is located at `cvs.boost-lab.net`.
 
+NOTE: Previous (and deprecated) attempts to do the same are documented at
+link:previous-attempts.adoc[].
+
 
 == Frequency
 
-This workflow is to be run once a day to import latest changes from Boost CVS.
+This workflow is run once a day to import latest changes from Boost CVS.
 
 
 == Usage
@@ -179,6 +182,9 @@ The converted Git repo will be available at `stepmod/stepmod-git`.
 
 
 === Upload the converted Git repo
+
+We actually use more complicated steps to upload commits via GHA iteratively
+in batches of commits (see import.yaml), but locally the following works.
 
 [source,sh]
 ----
