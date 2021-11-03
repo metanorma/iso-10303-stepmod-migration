@@ -70,18 +70,83 @@ rsync -avrPz -e ssh {{username}}@{{cvshost}}:/stepmod/ stepmod-rsync/
 
 === Install reposurgeon
 
-See import.yml.
+The best repository conversion tool, ever. `reposurgeon` works on Linux and
+macOS.
+
+On Ubuntu the version is outdated and does not contain the functionality we need
+here, so we must build it from scratch from Git.
+
+Ubuntu:
+[source,sh]
+----
+git clone https://gitlab.com/esr/reposurgeon
+cd reposurgeon
+git checkout 2f5f83ec63da34beaf8293434b5e1627366dfa7c
+sed -i 's/apt-get install /apt-get install -y /' Makefile
+make fullinstall
+make all
+----
+
+The Homebrew macOS version is recent enough to work with our workflow.
+
+macOS:
+[source,sh]
+----
+brew install reposurgeon
+----
 
 === Install cvs-fast-export
 
-`cvs-fast-export` works on Linux and macOS.
-Run it on Ubuntu with the `rsync`'ed CVS directory.
+`reposurgeon` depends on the `cvs-fast-export` tool which works on Linux and
+macOS.
 
-Install:
+Ubuntu:
 [source,sh]
 ----
 $ apt-get -y install cvs-fast-export
 ----
+
+macOS:
+[source,sh]
+----
+$ brew install cvs-fast-export
+----
+
+
+=== (one time) Setting up the reposurgeon conversion flow
+
+This is a first-time only step that is only needed only when you first setup
+`reposurgeon` migration for a repository.
+
+[source,sh]
+----
+$ cd stepmod
+$ repotool initialize stepmod
+repotool: what VCS do you want to convert from? cvs
+repotool: what VCS do you want to convert to? git
+repotool: generating Makefile, some variables in it need to be set.
+repotool: generating a stub options file.
+repotool: generating a stub lift file.
+repotool: generating a stub map file.
+----
+
+Then you need to fill in:
+
+* `Makefile` at `READ_OPTIONS =` to determine what to convert into Git branches
+* `stepmod.lift` if you want to add additional `reposurgeon` commands
+
+The way to determine what commands to provide reposurgeon is via testing in the `reposurgeon` CLI:
+
+[source,sh]
+----
+$ reposurgeon
+reposurgeon%
+----
+
+Please refer to the
+http://www.catb.org/~esr/reposurgeon/repository-editing.html[`reposurgeon` manual]
+for details.
+
 
 === Getting all users for email mapping
 
@@ -98,18 +163,20 @@ Then manually edit the `stepmod.map` file to provide author information.
 
 === Run reposurgeon to convert
 
-After all authors are mapped, run `reposurgeon` to create
-`stepmod-git`.
+After all authors are mapped, run `reposurgeon` to create `stepmod-git`.
 
 [source,sh]
 ----
 $ # assume that stepmod-rsync is the rsync copy
 $ cd stepmod
+$ # link the rsync'ed copy's /stepmod directory to stepmod-mirror
 $ ln -s ../stepmod-rsync/stepmod stepmod-mirror
+$ # run reposurgeon to perform conversion
 $ make
 ----
 
 The converted Git repo will be available at `stepmod/stepmod-git`.
+
 
 === Upload the converted Git repo
 
