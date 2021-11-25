@@ -51,8 +51,26 @@ jobs:
           git add -u
           git commit -m "Add stepmod annotations" || echo "Nothing to commit"
 
-      - name: Push annotations
+      - name: Git push to GitHub iso-10303-stepmod
         if: github.ref == 'refs/heads/main'
         working-directory: iso-10303-stepmod-wg12
         run: |
-          git push origin main -f -vv
+          max=$(git log --oneline|wc -l); \
+          for i in $(seq $max -500 1); do \
+            echo $i; g=$(git log --reverse --oneline --skip $i -n1|perl -alne'print $F[0]'); \
+            git push origin $g:refs/heads/gitconvert -f; \
+          done
+
+          for x in $(git branch | tr -ds '*' '' | paste -d " " - - - - - - - - - - | tr -s ' ' '#'); do \
+            y="${x//#/ }"; \
+            echo $y; \
+            git push origin -f $y; \
+          done
+
+          for x in $(git tag | tr -ds '*' '' | paste -d " " - - - - - - - - - - | tr -s ' ' '#'); do \
+            y="${x//#/ }"; \
+            echo $y; \
+            git push origin -f $y; \
+          done
+
+          git push origin :refs/heads/gitconvert -f
