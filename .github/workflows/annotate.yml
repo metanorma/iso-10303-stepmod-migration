@@ -27,6 +27,7 @@ jobs:
           repository: metanorma/iso-10303-stepmod-wg12
           token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
           ref: main
+          fetch-depth: 0
 
       - name: Setup Git
         run: |
