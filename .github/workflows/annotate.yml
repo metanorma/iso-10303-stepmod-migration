@@ -1,0 +1,58 @@
+name: annotate
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '*.adoc'
+  schedule:
+    - cron: '0 9 * * *'  # every day at 1:00
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  annotate:
+    name: Annotate stepmod-wg12 repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.0
+
+      - run: gem install stepmod-utils
+
+      - uses: actions/checkout@v2
+        with:
+          path: iso-10303-stepmod-wg12
+          repository: metanorma/iso-10303-stepmod-wg12
+          token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
+          ref: main
+
+      - name: Setup Git
+        run: |
+          git config --global init.defaultBranch main
+          git config --global user.name "metanorma-ci"
+          git config --global user.email "metanorma-ci@users.noreply.github.com"
+
+      - name: "Add Git remote - GitHub iso-10303-stepmod-wg12"
+        working-directory: iso-10303-stepmod-wg12
+        run: |
+          git remote set-url origin \
+            https://${{ secrets.METANORMA_CI_USERNAME }}:${{ secrets.METANORMA_CI_PAT_TOKEN }}@github.com/metanorma/iso-10303-stepmod
+
+      - name: Annotate repository
+        working-directory: iso-10303-stepmod-wg12
+        run: |
+          stepmod-annotate-all .
+
+      - name: Add annotations
+        working-directory: iso-10303-stepmod-wg12
+        run: |
+          git add -u
+          git commit -m "Add stepmod annotations" || echo "Nothing to commit"
+
+      - name: Push annotations
+        if: github.ref == 'refs/heads/main'
+        working-directory: iso-10303-stepmod-wg12
+        run: |
+          git push origin main -f -vv
