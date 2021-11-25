@@ -11,6 +11,7 @@ on:
     #   - '*'
   schedule:
     - cron: '0 1 * * *'  # every day at 1:00
+  pull_request:
 
 jobs:
   import:
