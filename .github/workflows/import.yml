@@ -85,13 +85,13 @@ jobs:
           make
           mv stepmod-git ../iso-10303-stepmod-cvs
 
-      - name: "[stepmod-archive] Add Git remote (stepmod-archive) - GitHub"
+      - name: "[stepmod-archive] Add Git remote - GitHub iso-10303-stepmod-cvs"
         working-directory: iso-10303-stepmod-cvs
         run: |
           git remote add origin \
             https://${{ secrets.METANORMA_CI_USERNAME }}:${{ secrets.METANORMA_CI_PAT_TOKEN }}@github.com/metanorma/iso-10303-stepmod-cvs
 
-      - name: "[stepmod-archive] Add Git remote (stepmod-archive) - ISO BitBucket"
+      - name: "[stepmod-archive] Add Git remote - ISO BitBucket stepmod_archive"
         working-directory: iso-10303-stepmod-cvs
         run: |
           git remote add iso \
@@ -136,6 +136,7 @@ jobs:
           git tag
 
       - name: "[stepmod-archive] Git push to GitHub iso-10303-stepmod-cvs"
+        if: github.ref == 'refs/heads/main'
         working-directory: iso-10303-stepmod-cvs
         run: |
           max=$(git log --oneline|wc -l); \
@@ -159,6 +160,7 @@ jobs:
           git push origin :refs/heads/gitconvert -f
 
       - name: "[stepmod-archive] Git push to ISO BitBucket stepmod_archive"
+        if: github.ref == 'refs/heads/main'
         working-directory: iso-10303-stepmod-cvs
         run: |
           max=$(git log --oneline|wc -l); \
@@ -198,6 +200,7 @@ jobs:
           git tag
 
       - name: "[wg12-stepmod] Git push to GitHub iso-10303-stepmod-wg12"
+        if: github.ref == 'refs/heads/main'
         working-directory: iso-10303-stepmod-wg12
         run: |
           max=$(git log --oneline|wc -l); \
@@ -221,6 +224,7 @@ jobs:
           git push origin :refs/heads/gitconvert -f
 
       - name: "[wg12-stepmod] Git push to ISO BitBucket wg12-stepmod"
+        if: github.ref == 'refs/heads/main'
         working-directory: iso-10303-stepmod-wg12
         run: |
           max=$(git log --oneline|wc -l); \
