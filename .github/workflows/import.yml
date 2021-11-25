@@ -75,7 +75,7 @@ jobs:
       #   run: |
       #     cvssync -v ${{ secrets.BOOST_CVS_SSH_USER }}@${{ secrets.BOOST_CVS_HOST }}:/stepmod stepmod/data
 
-      - name: Convert CVS to Git via reposurgeon
+      - name: "[stepmod-archive] Convert CVS to Git (stepmod-archive) via reposurgeon"
         working-directory: stepmod
         env:
           TERM: xterm-256color
@@ -84,41 +84,57 @@ jobs:
           make
           mv stepmod-git ../iso-10303-stepmod-cvs
 
-      - name: Add Git remote - GitHub
+      - name: "[stepmod-archive] Add Git remote (stepmod-archive) - GitHub"
         working-directory: iso-10303-stepmod-cvs
         run: |
           git remote add origin \
             https://${{ secrets.METANORMA_CI_USERNAME }}:${{ secrets.METANORMA_CI_PAT_TOKEN }}@github.com/metanorma/iso-10303-stepmod-cvs
 
-      - name: Add Git remote - ISO BitBucket
+      - name: "[stepmod-archive] Add Git remote (stepmod-archive) - ISO BitBucket"
         working-directory: iso-10303-stepmod-cvs
         run: |
           git remote add iso \
             https://${{ secrets.ISO_BITBUCKET_USERNAME_URLENCODED }}:${{ secrets.ISO_BITBUCKET_PAT_TOKEN_URLENCODED }}@sd.iso.org/bitbucket-pilot/scm/isotc184sc4/stepmod_archive.git
 
-      - name: Git switch branch to main
+      - name: "[wg12-stepmod] Convert CVS to Git via reposurgeon"
+        working-directory: stepmod-wg12
+        env:
+          TERM: xterm-256color
+        run: |
+          ln -s ../stepmod-rsync/stepmod stepmod-wg12-mirror
+          ln -s ../stepmod/stepmod.cvs stepmod-wg12.cvs
+          make
+          mv stepmod-wg12-git ../iso-10303-stepmod-wg12
+
+      - name: "[wg12-stepmod] Add Git remote - GitHub iso-10303-stepmod-wg12"
+        working-directory: iso-10303-stepmod-wg12
+        run: |
+          git remote add origin \
+            https://${{ secrets.METANORMA_CI_USERNAME }}:${{ secrets.METANORMA_CI_PAT_TOKEN }}@github.com/metanorma/iso-10303-stepmod-wg12
+
+      - name: "[wg12-stepmod] Add Git remote - ISO BitBucket wg12-stepmod"
+        working-directory: iso-10303-stepmod-wg12
+        run: |
+          git remote add iso \
+            https://${{ secrets.ISO_BITBUCKET_USERNAME_URLENCODED }}:${{ secrets.ISO_BITBUCKET_PAT_TOKEN_URLENCODED }}@sd.iso.org/bitbucket-pilot/scm/isotc184sc4/wg12-stepmod.git
+
+      - name: "[stepmod-archive] Git switch branch to main"
         working-directory: iso-10303-stepmod-cvs
         run: |
           git checkout main
+          ls
 
-      # - name: Remove large files from history that have been already deleted
-      #   run: |
-      #     curl -sSL https://repo1.maven.org/maven2/com/madgag/bfg/1.14.0/bfg-1.14.0.jar -o bfg.jar
-      #     java -jar bfg.jar --strip-blobs-bigger-than 100M iso-10303-stepmod-cvs
-      #     git -C iso-10303-stepmod-cvs reflog expire --expire=now --all && \
-      #       git -C iso-10303-stepmod-cvs gc --prune=now --aggressive
-
-      - name: List git branches
+      - name: "[stepmod-archive] List git branches"
         working-directory: iso-10303-stepmod-cvs
         run: |
           git branch
 
-      - name: List git tags
+      - name: "[stepmod-archive] List git tags"
         working-directory: iso-10303-stepmod-cvs
         run: |
           git tag
 
-      - name: Git push to GitHub iso-10303-stepmod-cvs
+      - name: "[stepmod-archive] Git push to GitHub iso-10303-stepmod-cvs"
         working-directory: iso-10303-stepmod-cvs
         run: |
           max=$(git log --oneline|wc -l); \
@@ -141,7 +157,7 @@ jobs:
 
           git push origin :refs/heads/gitconvert -f
 
-      - name: Git push to ISO BitBucket smrl-metanorma
+      - name: "[stepmod-archive] Git push to ISO BitBucket stepmod_archive"
         working-directory: iso-10303-stepmod-cvs
         run: |
           max=$(git log --oneline|wc -l); \
@@ -163,3 +179,73 @@ jobs:
           done
 
           git push iso :refs/heads/gitconvert -f
+
+      - name: "[wg12-stepmod] Git switch branch to main"
+        working-directory: iso-10303-stepmod-wg12
+        run: |
+          git checkout main
+          ls
+
+      - name: "[wg12-stepmod] List git branches"
+        working-directory: iso-10303-stepmod-wg12
+        run: |
+          git branch
+
+      - name: "[wg12-stepmod] List git tags"
+        working-directory: iso-10303-stepmod-wg12
+        run: |
+          git tag
+
+      - name: "[wg12-stepmod] Git push to GitHub iso-10303-stepmod-wg12"
+        working-directory: iso-10303-stepmod-wg12
+        run: |
+          max=$(git log --oneline|wc -l); \
+          for i in $(seq $max -500 1); do \
+            echo $i; g=$(git log --reverse --oneline --skip $i -n1|perl -alne'print $F[0]'); \
+            git push origin $g:refs/heads/gitconvert -f; \
+          done
+
+          for x in $(git branch | tr -ds '*' '' | paste -d " " - - - - - - - - - - | tr -s ' ' '#'); do \
+            y="${x//#/ }"; \
+            echo $y; \
+            git push origin -f $y; \
+          done
+
+          for x in $(git tag | tr -ds '*' '' | paste -d " " - - - - - - - - - - | tr -s ' ' '#'); do \
+            y="${x//#/ }"; \
+            echo $y; \
+            git push origin -f $y; \
+          done
+
+          git push origin :refs/heads/gitconvert -f
+
+      - name: "[wg12-stepmod] Git push to ISO BitBucket wg12-stepmod"
+        working-directory: iso-10303-stepmod-wg12
+        run: |
+          max=$(git log --oneline|wc -l); \
+          for i in $(seq $max -500 1); do \
+            echo $i; g=$(git log --reverse --oneline --skip $i -n1|perl -alne'print $F[0]'); \
+            git push iso $g:refs/heads/gitconvert -f; \
+          done
+
+          for x in $(git branch | tr -ds '*' '' | paste -d " " - - - - - - - - - - | tr -s ' ' '#'); do \
+            y="${x//#/ }"; \
+            echo $y; \
+            git push iso -f $y; \
+          done
+
+          for x in $(git tag | tr -ds '*' '' | paste -d " " - - - - - - - - - - | tr -s ' ' '#'); do \
+            y="${x//#/ }"; \
+            echo $y; \
+            git push iso -f $y; \
+          done
+
+          git push iso :refs/heads/gitconvert -f
+
+      # - name: Remove large files from history that have been already deleted
+      #   run: |
+      #     curl -sSL https://repo1.maven.org/maven2/com/madgag/bfg/1.14.0/bfg-1.14.0.jar -o bfg.jar
+      #     java -jar bfg.jar --strip-blobs-bigger-than 100M iso-10303-stepmod-cvs
+      #     git -C iso-10303-stepmod-cvs reflog expire --expire=now --all && \
+      #       git -C iso-10303-stepmod-cvs gc --prune=now --aggressive
+
