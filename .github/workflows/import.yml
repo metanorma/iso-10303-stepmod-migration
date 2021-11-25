@@ -94,7 +94,7 @@ jobs:
         working-directory: iso-10303-stepmod-cvs
         run: |
           git remote add iso \
-            https://${{ secrets.ISO_BITBUCKET_USERNAME_URLENCODED }}:${{ secrets.ISO_BITBUCKET_PAT_TOKEN_URLENCODED }}@sd.iso.org/bitbucket-pilot/scm/~ronald.tse_eccma.org/smrl-metanorma.git
+            https://${{ secrets.ISO_BITBUCKET_USERNAME_URLENCODED }}:${{ secrets.ISO_BITBUCKET_PAT_TOKEN_URLENCODED }}@sd.iso.org/bitbucket-pilot/scm/isotc184sc4/stepmod_archive.git
 
       - name: Git switch branch to main
         working-directory: iso-10303-stepmod-cvs
