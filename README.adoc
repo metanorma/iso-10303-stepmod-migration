@@ -1,6 +1,8 @@
 = ISO 10303 STEPmod CVS import to Git
 
-image:https://github.com/metanorma/iso-10303-stepmod-migration/actions/workflows/import.yml/badge.svg["import", link="https://github.com/metanorma/iso-10303-stepmod-migration/actions/workflows/import.yml"]
+image:https://github.com/metanorma/iso-10303-stepmod-migration/actions/workflows/import-archive.yml/badge.svg["import-archive", link="https://github.com/metanorma/iso-10303-stepmod-migration/actions/workflows/import-archive.yml"]
+image:https://github.com/metanorma/iso-10303-stepmod-migration/actions/workflows/import-wg12.yml/badge.svg["import-wg12", link="https://github.com/metanorma/iso-10303-stepmod-migration/actions/workflows/import-wg12.yml"]
+image:https://github.com/metanorma/iso-10303-stepmod-migration/actions/workflows/annotate.yml/badge.svg["annotate", link="https://github.com/metanorma/iso-10303-stepmod-migration/actions/workflows/annotate.yml"]
 
 == Purpose
 
