@@ -6,6 +6,7 @@ expunge /^apps/
 expunge /^ballots/
 expunge /^config_management/
 expunge /^data/business_object_models/
+expunge /^data/fundamentals/
 expunge /^data/core_models/
 expunge /^data/implementation_resources/
 expunge /^data/reference/
