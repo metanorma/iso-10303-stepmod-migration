@@ -13,7 +13,6 @@ expunge /^data/core_models/
 expunge /^data/implementation_resources/
 expunge /^data/reference/
 expunge /^data/tools/
-expunge /^doc/
 expunge /^etc/
 expunge /^project_management/
 expunge /^release_notes/
