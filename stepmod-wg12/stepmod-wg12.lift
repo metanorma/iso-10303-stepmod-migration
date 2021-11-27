@@ -5,7 +5,9 @@ expunge /WG12N_20190719.zip$/
 expunge /^apps/
 expunge /^ballots/
 expunge /^config_management/
-expunge /^data/business_object_models/
+expunge /^data/business_object_models/managed_model_based_3d_engineering_domain
+expunge /^data/business_object_models/vehicle_electric_container
+expunge /^data/business_object_models/bom_index.xml
 expunge /^data/fundamentals/
 expunge /^data/core_models/
 expunge /^data/implementation_resources/
