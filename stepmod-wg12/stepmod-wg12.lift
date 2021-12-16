@@ -1,6 +1,7 @@
 # Lift commands for stepmod-wg12
 lint
 gitify
+
 expunge /WG12N_20190719.zip$/
 expunge /^apps/
 expunge /^ballots/
@@ -16,4 +17,10 @@ expunge /^data/tools/
 expunge /^etc/
 expunge /^project_management/
 expunge /^release_notes/
+
+# Tags with the name prefix emptycommit were branch-creation commits.
+# Usually there's nothing interesting in the comment text, but you'll
+# want to browse them and check. This command will delete such tags.
+tag delete /emptycommit/
+
 branch rename refs/heads/master refs/heads/main
