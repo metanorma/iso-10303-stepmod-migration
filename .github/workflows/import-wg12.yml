@@ -97,12 +97,18 @@ jobs:
           git remote add iso \
             https://${{ secrets.ISO_BITBUCKET_USERNAME_URLENCODED }}:${{ secrets.ISO_BITBUCKET_PAT_TOKEN_URLENCODED }}@sd.iso.org/bitbucket-pilot/scm/isotc184sc4/wg12-stepmod.git
 
-
       - name: "[wg12-stepmod] Git switch branch to main"
         working-directory: iso-10303-stepmod-wg12
         run: |
           git checkout main
           ls
+
+      - name: "[wg12-stepmod] Drop Git branches and cleanup"
+        working-directory: iso-10303-stepmod-wg12
+        run: |
+          ./drop-unwanted-branches.sh
+          git reflog expire --expire-unreachable=now --all
+          git gc --prune=now
 
       - name: "[wg12-stepmod] List git branches"
         working-directory: iso-10303-stepmod-wg12
