@@ -106,7 +106,7 @@ jobs:
       - name: "[wg12-stepmod] Drop Git branches and cleanup"
         working-directory: iso-10303-stepmod-wg12
         run: |
-          ../setpmod-wg12/drop-unwanted-branches.sh
+          ../stepmod-wg12/drop-unwanted-branches.sh
           git reflog expire --expire-unreachable=now --all
           git gc --prune=now
 
